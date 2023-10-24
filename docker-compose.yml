@@ -1,0 +1,41 @@
+version: "3"
+services:
+  my-mongodb:
+    image: mongo
+    container_name: kafka_db
+    ports:
+      - "27017:27017"
+    networks:
+      - my_network
+
+  my-zookeeper:
+    image: confluentinc/cp-zookeeper
+    container_name: my-zookeeper
+    networks:
+      - my_network
+
+  my-kafka:
+    image: confluentinc/cp-kafka
+    container_name: my-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: my-zookeeper:2181
+    networks:
+      - my_network
+
+  kafka_app:
+    build: .
+    container_name: kafka_app
+    depends_on:
+      - my-mongodb
+      - my-kafka
+    networks:
+      - my_network
+    command: python main.py
+    environment:
+      - KAFKA_BROKER=my-kafka:9092
+      - MONGODB_URI=my-mongodb:27017
+
+networks:
+  my_network:
